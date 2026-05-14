@@ -52,7 +52,7 @@ mpirun --hostfile hostfile -np 8 python3 hello_mpi.py
 └── run_all.sh
 ```
 ## FASE 3 — Preprocessing Dataset
-* [ ] Download EPSILON da LIBSVM repository (~12GB, D=2000, N=500k) (SKIPPATO)
+* [ x] Download EPSILON da LIBSVM repository (~12GB, D=2000, N=500k) (SKIPPATO)
 * [x ] Download SUSY (~2.4GB, D=18, N=5M)
 * [ x] preprocess.py — parsing LibSVM → numpy array → flat binary float32
 * [ ]x Salva X_train.bin, y_train.bin, X_test.bin, y_test.bin per ogni dataset

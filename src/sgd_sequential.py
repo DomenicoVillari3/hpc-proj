@@ -33,7 +33,7 @@ N_train = meta["N_train"]
 N_test  = meta["N_test"]
 D       = meta["D"]
 
-print(f"[INFO] Dataset: {DATASET} | N_train={N_train} | N_test={N_test} | D={D}")
+print(f"Dataset: {DATASET} N_train={N_train}  N_test={N_test} D={D}")
 
 X_train = np.fromfile(os.path.join(DATA_DIR, f"{DATASET}_X_train.bin"), dtype=np.float32).reshape(N_train, D)
 y_train = np.fromfile(os.path.join(DATA_DIR, f"{DATASET}_y_train.bin"), dtype=np.float32)
