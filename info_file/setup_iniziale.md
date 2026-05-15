@@ -52,12 +52,16 @@ Ecco la Fase 1 aggiornata con tutto quello che è emerso durante il setup reale:
 Aggiungi su ogni nodo:
 192.168.128.210  mpi1
 192.168.128.211  mpi2
-192.168.128.213  mpi3
-192.168.128.214  mpi4
-192.168.128.215  mpi5
-192.168.128.223  mpi6
-192.168.128.221  mpi7
-192.168.128.222  mpi8 
+192.168.128.212  mpi3
+192.168.128.213  mpi4
+192.168.128.214  mpi5
+192.168.128.215  mpi6
+192.168.128.220  mpi7
+192.168.128.221  mpi8
+192.168.128.222  mpi9
+192.168.128.223  mpi10
+192.168.128.224  mpi11
+192.168.128.225  mpi12
 ```
 
 Verifica da mpi1:
@@ -84,18 +88,25 @@ su - mpiuser
 ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
 
 # Pre-accetta le chiavi host:
-ssh-keyscan -H mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 >> ~/.ssh/known_hosts
+ssh-keyscan -H mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12>> ~/.ssh/known_hosts
 
 # Copia chiave su tutti i nodi:
-for node in mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8; do
+for node in mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12; do
     ssh-copy-id mpiuser@$node
+done
+
+oppure 
+
+# Copia chiave su tutti i nodi:
+for node in mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12; do
+    ssh-copy-id -i ~/.ssh/id_rsa.pub mpiuser@$node
 done
 
 eval $(ssh-agent)
 ssh-add ~/.ssh/id_rsa
 Se un nodo rifiuta la password, abilitare temporaneamente PasswordAuthentication yes in /etc/ssh/sshd_config e riavviare con sudo systemctl restart ssh.
 Verifica:
-for node in mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8; do
+for node in mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12; do
     echo -n "$node: "
     ssh -o BatchMode=yes -o ConnectTimeout=5 mpiuser@$node hostname 2>&1
 done
@@ -104,64 +115,102 @@ done
 Tutti devono rispondere senza password.
 
 ### 1.5 — NFS
-Script master (~/setup_master.sh su mpi1, eseguito come amministratore):
+#### Script master (~/setup_master.sh su mpi1, eseguito come amministratore):
 ```
 #!/bin/bash
-EXPORT_DIR="/home/mpiuser/cloud"
+
+EXPORT_DIR="/home/mpiuser/test"
+
 SUBNET="192.168.128.0/24"
 
+echo "[INFO] Installing NFS server..."
+
+sudo apt update -y
+
 sudo apt install -y nfs-kernel-server
+
+echo "[INFO] Creating export directory: $EXPORT_DIR"
+
 sudo mkdir -p $EXPORT_DIR
+
 sudo chown -R mpiuser:mpiuser $EXPORT_DIR
+
 sudo chmod 755 $EXPORT_DIR
 
+echo "[INFO] Configuring /etc/exports..."
+
 sudo sed -i '\|'$EXPORT_DIR'|d' /etc/exports
+
 echo "$EXPORT_DIR $SUBNET(rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
 
-# Rimuovi entry NFS da fstab sul master (causa cyclic dependency):
-sudo sed -i '\|'$EXPORT_DIR'|d' /etc/fstab
-sudo systemctl daemon-reload
+echo "[INFO] Applying exports..."
 
 sudo exportfs -ra
-sudo systemctl start nfs-kernel-server
+
+echo "[INFO] Restarting NFS service..."
+
+sudo systemctl restart nfs-kernel-server
+
+echo "[SUCCESS] NFS Master ready!"
+
 sudo exportfs -v
-Script worker (~/setup_worker.sh, copiato su ogni worker):
+
+```
+
+#### SETUP WORKER (setup_worker.sh )
+```
 #!/bin/bash
+
 MASTER_IP="192.168.128.210"
-EXPORT_DIR="/home/mpiuser/cloud"
-MOUNT_POINT="/home/mpiuser/cloud"
+
+EXPORT_DIR="/home/mpiuser/test"
+
+MOUNT_POINT="/home/mpiuser/test"
+
+echo "[INFO] Installing NFS client..."
+
+sudo apt update -y
 
 sudo apt install -y nfs-common
+
+echo "[INFO] Creating mount point $MOUNT_POINT"
+
 sudo mkdir -p $MOUNT_POINT
+
 sudo chown -R mpiuser:mpiuser $MOUNT_POINT
+
+echo "[INFO] Mounting NFS share..."
 
 sudo mount $MASTER_IP:$EXPORT_DIR $MOUNT_POINT
 
 if mountpoint -q $MOUNT_POINT; then
-    echo "[SUCCESS] Mounted at $MOUNT_POINT"
-else
-    echo "[ERROR] Failed to mount $MOUNT_POINT"
-    exit 1
-fi
 
-sudo sed -i '\|'$MOUNT_POINT'|d' /etc/fstab
-echo "$MASTER_IP:$EXPORT_DIR $MOUNT_POINT nfs defaults 0 0" | sudo tee -a /etc/fstab
-Deploy su tutti i worker:
-for node in mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8; do
-    scp ~/setup_worker.sh amministratore@$node:~/
-    ssh amministratore@$node "bash ~/setup_worker.sh"
-done
-Verifica:
+    echo "[SUCCESS] Mounted at $MOUNT_POINT"
+
+else
+
+    echo "[ERROR] Failed to mount $MOUNT_POINT"
+
+    exit 1
+
+fi
+```
+
+#### Verifica:
+```
 echo "NFS OK" | sudo tee /home/mpiuser/cloud/test.txt
-for node in mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8; do
+for node in mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12; do
     echo -n "$node: "
-    ssh amministratore@$node "cat /home/mpiuser/cloud/test.txt"
+    ssh amministratore@$node "cat /home/mpiuser/test/test.txt"
 done
 ```
+
+
+
 
 ##### Output
 ```
-For node in mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8; do
+for node in mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12; do
     echo -n "$node: "
     ssh mpiuser@$node "cat /home/mpiuser/test/test.txt"
 done
@@ -304,17 +353,22 @@ Authorization required, but no authorization protocol specified
 Authorization required, but no authorization protocol specified
 
 OK
+```
 
+## 1.7 — GPU NVIDIA + OpenCL (tutti gli 8 nodi)
+```
 
-1.7 — GPU NVIDIA + OpenCL (tutti gli 8 nodi)
 sudo apt-get install -y ocl-icd-opencl-dev opencl-headers clinfo
 Se nvidia-smi dà errore driver/library mismatch: sudo reboot.
+```
+
 Verifica:
-for node in mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8; do
+```
+for node in mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12; do
     echo -n "$node: "
     ssh amministratore@$node "nvidia-smi --query-gpu=name --format=csv,noheader 2>&1"
 done
-for node in mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8; do
+for node in mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12; do
     echo -n "$node: "
     ssh amministratore@$node "nvidia-smi --query-gpu=name --format=csv,noheader 2>&1"
 done
@@ -339,7 +393,7 @@ NVIDIA T1000
 
 
 #### 1.8 — Hostfile MPI
-/home/mpiuser/cloud/hostfile:
+/home/mpiuser/test/hostfile:
 ```
 mpi1 slots=1
 mpi2 slots=1
@@ -349,11 +403,15 @@ mpi5 slots=1
 mpi6 slots=1
 mpi7 slots=1
 mpi8 slots=1
+mpi9 slots=1
+mpi10 slots=1
+mpi11 slots=1
+mpi12 slots=1
 ```
 
 
 #### 1.9 — Test end-to-end mpi4py
- /home/mpiuser/cloud/hello_mpi.py
+ /home/mpiuser/test/hello_mpi.py
 ```
 from mpi4py import MPI
 import socket
@@ -363,8 +421,8 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 host = socket.gethostname()
 print(f"rank {rank}/{size} | host {host}")
-mpirun --hostfile /home/mpiuser/cloud/hostfile -np 8 \
-    python3 /home/mpiuser/cloud/hello_mpi.py
+mpirun --hostfile /home/mpiuser/test/hostfile -np 12 \
+    python3 /home/mpiuser/test/hello_mpi.py
 ```
 Output atteso: 8 righe, una per nodo.
 
