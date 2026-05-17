@@ -5,6 +5,8 @@ import time
 import csv
 from dotenv import load_dotenv
 
+from utils import sigmoid, compute_loss, compute_accuracy
+
 load_dotenv()
 
 
@@ -40,18 +42,6 @@ y_train = np.fromfile(os.path.join(DATA_DIR, f"{DATASET}_y_train.bin"), dtype=np
 X_test  = np.fromfile(os.path.join(DATA_DIR, f"{DATASET}_X_test.bin"),  dtype=np.float32).reshape(N_test, D)
 y_test  = np.fromfile(os.path.join(DATA_DIR, f"{DATASET}_y_test.bin"),  dtype=np.float32)
 
-# --- Funzioni SGD ---
-def sigmoid(z):
-    return 1.0 / (1.0 + np.exp(-np.clip(z, -30, 30)))
-
-def compute_loss(X, y, w):
-    p = sigmoid(X @ w)
-    p = np.clip(p, 1e-7, 1 - 1e-7) # per evitare log(0)
-    return -np.mean(y * np.log(p) + (1 - y) * np.log(1 - p))
-
-def compute_accuracy(X, y, w):
-    preds = (sigmoid(X @ w) >= 0.5).astype(np.float32)
-    return np.mean(preds == y)
 
 # --- Inizializzazione ---
 rng = np.random.default_rng(SEED)

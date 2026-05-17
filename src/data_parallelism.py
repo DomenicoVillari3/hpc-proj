@@ -6,6 +6,8 @@ import csv
 from mpi4py import MPI
 from dotenv import load_dotenv
 
+from utils import sigmoid, compute_loss, compute_accuracy
+
 load_dotenv()
 
 # --- MPI Init ---
@@ -22,18 +24,7 @@ EPOCHS     = int(os.getenv("EPOCHS", 50))
 BATCH_SIZE = int(os.getenv("BATCH_SIZE", 256))
 LR0        = float(os.getenv("LEARNING_RATE", 0.1))
 
-# --- Funzioni comuni ---
-def sigmoid(z):
-    return 1.0 / (1.0 + np.exp(-np.clip(z, -30, 30)))
 
-def compute_loss(X, y, w):
-    p = sigmoid(X @ w)
-    p = np.clip(p, 1e-7, 1 - 1e-7)
-    return -np.mean(y * np.log(p) + (1 - y) * np.log(1 - p))
-
-def compute_accuracy(X, y, w):
-    preds = (sigmoid(X @ w) >= 0.5).astype(np.float32)
-    return np.mean(preds == y)
 
 # --- Caricamento metadata (tutti i rank) ---
 meta_path = os.path.join(DATA_DIR, f"{DATASET}_meta.json")
