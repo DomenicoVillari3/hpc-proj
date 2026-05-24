@@ -1,0 +1,5 @@
+lr,batch,use_gpu,dataset,accuracy,loss,time,file
+0.16,4096,True,epsilon_normalized,0.72255,0.665447,455.26,job_epsilon_normalized_gpu_lr0.1600_b4096_g2.csv
+0.16,4096,False,epsilon_normalized,0.72255,0.665447,574.64,job_epsilon_normalized_cpu_lr0.1600_b4096_g0.csv
+0.64,16384,True,epsilon_normalized,0.72107,0.667094,308.78,job_epsilon_normalized_gpu_lr0.6400_b16384_g3.csv
+0.64,16384,False,epsilon_normalized,0.72107,0.667094,365.81,job_epsilon_normalized_cpu_lr0.6400_b16384_g1.csv

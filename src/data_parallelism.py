@@ -17,7 +17,7 @@ size = comm.Get_size()
 
 DATA_DIR   = os.getenv("DATASET_DIR")
 DATASET    = os.getenv("DATASET_NAME")
-RESULTS    = os.path.join(os.getenv("RESULTS_DIR"), f"data_parallel_np{size}.csv")
+RESULTS = os.path.join(os.getenv("RESULTS_DIR"), f"data_parallelism/data_parallel_{DATASET}_np{size}.csv")
 
 SEED       = int(os.getenv("SEED", 42))
 EPOCHS     = int(os.getenv("EPOCHS", 50))

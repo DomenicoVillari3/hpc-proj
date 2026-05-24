@@ -7,6 +7,7 @@ import pyopencl as cl
 from concurrent.futures import ThreadPoolExecutor
 from mpi4py import MPI
 from dotenv import load_dotenv
+from utils import *
 
 load_dotenv()
 
@@ -17,7 +18,7 @@ size = comm.Get_size()
 
 DATA_DIR    = os.getenv("DATASET_DIR")
 DATASET     = os.getenv("DATASET_NAME")
-RESULTS     = os.path.join(os.getenv("RESULTS_DIR"), f"opencl_np{size}.csv")
+RESULTS = os.path.join(os.getenv("RESULTS_DIR"), f"opencl/opencl_{DATASET}_np{size}.csv")
 KERNEL_PATH = os.path.join(os.getenv("KERNEL_DIR",
               "/home/mpiuser/test/kernels"), "gradient.cl")
 
@@ -27,18 +28,6 @@ BATCH_SIZE  = int(os.getenv("BATCH_SIZE", 4096))
 LR0         = float(os.getenv("LEARNING_RATE", 0.1))
 VAL_SPLIT   = 0.05
 WG_SIZE     = 256
-
-# --- Funzioni CPU ---
-def sigmoid_np(z):
-    return 1.0 / (1.0 + np.exp(-np.clip(z, -30, 30)))
-
-def compute_loss(X, y, w):
-    p = sigmoid_np(X @ w)
-    p = np.clip(p, 1e-7, 1 - 1e-7)
-    return -np.mean(y * np.log(p) + (1 - y) * np.log(1 - p))
-
-def compute_accuracy(X, y, w):
-    return np.mean((sigmoid_np(X @ w) >= 0.5).astype(np.float32) == y)
 
 # --- Setup OpenCL ---
 def setup_opencl():

@@ -13,7 +13,7 @@ load_dotenv()
 
 DATA_DIR   = os.getenv("DATASET_DIR")
 DATASET    = os.getenv("DATASET_NAME")
-RESULTS    = os.path.join(os.getenv("RESULTS_DIR"), "sequential.csv")
+RESULTS = os.path.join(os.getenv("RESULTS_DIR"), f"sequential/sequential_{DATASET}.csv")
 os.makedirs(os.path.dirname(RESULTS), exist_ok=True)
 
   

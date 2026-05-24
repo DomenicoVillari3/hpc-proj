@@ -4,14 +4,19 @@
 
 2. Configurazione /etc/hosts su tutti i nodi :
     ```
-    192.168.128.210  mpi1 (cariddi 0)
-    192.168.128.211  mpi2 (cariddi 1)
-    192.168.128.213  mpi3 (cariddi 2)
-    192.168.128.214  mpi4 (cariddi 4)
-    192.168.128.215  mpi5 (cariddi 5) 
-    192.168.128.223  mpi6 (scilla 3)
-    192.168.128.221  mpi7 (scilla 1)
-    192.168.128.222  mpi8 (scilla2)
+    192.168.128.210  mpi1
+    192.168.128.211  mpi2
+    192.168.128.212  mpi3
+    192.168.128.213  mpi4
+    192.168.128.214  mpi5
+    192.168.128.215  mpi6
+    192.168.128.220  mpi7
+    192.168.128.221  mpi8
+    192.168.128.222  mpi9
+    192.168.128.223  mpi10
+    192.168.128.224  mpi11
+    192.168.128.225  mpi12
+
     ```
 
 3. download opencl e driver Nvidia
@@ -62,11 +67,12 @@ Aggiungi su ogni nodo:
 192.168.128.223  mpi10
 192.168.128.224  mpi11
 192.168.128.225  mpi12
+192.168.128.237  mpi13
 ```
 
 Verifica da mpi1:
 
-```for i in 2 3 4 5 6 7 8; do ping -c1 mpi$i | grep "1 received"; done```
+```for i in {2..13}; do ping -c1 mpi$i | grep "1 received" && echo "mpi$i è vivo"; done```
 
 #### 1.2 — Utente mpiuser (tutti gli 8 nodi)
 ```
@@ -98,7 +104,7 @@ done
 oppure 
 
 # Copia chiave su tutti i nodi:
-for node in mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12; do
+for node in mpi13; do
     ssh-copy-id -i ~/.ssh/id_rsa.pub mpiuser@$node
 done
 
