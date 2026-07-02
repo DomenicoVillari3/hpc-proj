@@ -94,17 +94,17 @@ su - mpiuser
 ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
 
 # Pre-accetta le chiavi host:
-ssh-keyscan -H mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12>> ~/.ssh/known_hosts
+ssh-keyscan -H mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12 13>> ~/.ssh/known_hosts
 
 # Copia chiave su tutti i nodi:
-for node in mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12; do
+for node in mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12 mpi13; do
     ssh-copy-id mpiuser@$node
 done
 
 oppure 
 
 # Copia chiave su tutti i nodi:
-for node in mpi13; do
+for node in mpi13 mpi12; do
     ssh-copy-id -i ~/.ssh/id_rsa.pub mpiuser@$node
 done
 

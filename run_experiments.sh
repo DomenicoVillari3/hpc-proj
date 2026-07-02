@@ -41,21 +41,21 @@ run_exp() {
 # L2 — MPI Data Parallelism (Strong Scaling)
 # ──────────────────────────────────────────────
 # for np in 2 4 8 13; do
-#     run_exp "L2 Data Parallel np=$np — EPSILON" $np data_parallelism.py
+run_exp "L2 Data Parallel np=3 — EPSILON" 3 data_parallelism.py
 # done
 
 # ──────────────────────────────────────────────
 # L3 — Task Parallelism
 # ──────────────────────────────────────────────
 
-# for np in 2 4 8 13; do
-#     run_exp "L3 Task Parallel np=$np — EPSILON" $np task_parallelism.py
-# done
+for np in 3; do
+    run_exp "L3 Task Parallel np=$np — EPSILON" $np task_parallelism.py
+done
 
 # ──────────────────────────────────────────────
 # L4 — OpenCL GPU
 # ──────────────────────────────────────────────
-for np in 2 4 8 13; do
+for np in 3; do
     run_exp "L4 OpenCL np=$np — EPSILON" $np sgd_opencl.py
 done
 

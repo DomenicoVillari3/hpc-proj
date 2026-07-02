@@ -1,0 +1,86 @@
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+[INFO] Dataset: epsilon_normalized | N_train=400000 | D=2000
+[INFO] Ranks: 1 | shard: ~400000 | val_size: 20000
+[INFO] epochs=200 | batch=4096 | lr0=0.1
+[rank 0] Building OpenCL program on NVIDIA T1000...
+[rank 0] Build OK
+[OpenCL] Platform: NVIDIA CUDA
+[OpenCL] Device:   NVIDIA T1000
+[OpenCL] Max WG:   1024
+  Epoch   1 | loss=0.6914 | acc=0.6317 | loss_val=0.6914 | acc_val=0.6323 | lr=0.10000 | time=14.82s | gpu=1.4299s | bc=13.3628s | wait=0.0005s | overlap=13.3623s
+  Epoch  10 | loss=0.6800 | acc=0.7103 | loss_val=0.6801 | acc_val=0.7121 | lr=0.05263 | time=14.69s | gpu=1.2086s | bc=12.0027s | wait=0.0004s | overlap=12.0023s
+  Epoch  20 | loss=0.6731 | acc=0.7155 | loss_val=0.6731 | acc_val=0.7173 | lr=0.03448 | time=15.06s | gpu=1.4256s | bc=13.3468s | wait=0.0005s | overlap=13.3464s
+  Epoch  30 | loss=0.6684 | acc=0.7195 | loss_val=0.6684 | acc_val=0.7204 | lr=0.02564 | time=14.70s | gpu=1.3699s | bc=13.3204s | wait=0.0005s | overlap=13.3200s
+  Epoch  40 | loss=0.6649 | acc=0.7226 | loss_val=0.6650 | acc_val=0.7239 | lr=0.02041 | time=14.66s | gpu=1.4103s | bc=13.3359s | wait=0.0005s | overlap=13.3354s
+  Epoch  50 | loss=0.6621 | acc=0.7253 | loss_val=0.6622 | acc_val=0.7255 | lr=0.01695 | time=14.68s | gpu=1.3724s | bc=13.3159s | wait=0.0005s | overlap=13.3154s
+  Epoch  60 | loss=0.6599 | acc=0.7272 | loss_val=0.6599 | acc_val=0.7272 | lr=0.01449 | time=14.82s | gpu=1.3542s | bc=13.3108s | wait=0.0005s | overlap=13.3103s
+  Epoch  70 | loss=0.6579 | acc=0.7287 | loss_val=0.6580 | acc_val=0.7287 | lr=0.01266 | time=14.69s | gpu=1.3971s | bc=13.3390s | wait=0.0005s | overlap=13.3385s
+  Epoch  80 | loss=0.6562 | acc=0.7301 | loss_val=0.6563 | acc_val=0.7304 | lr=0.01124 | time=14.71s | gpu=1.4163s | bc=13.3374s | wait=0.0005s | overlap=13.3369s
+  Epoch  90 | loss=0.6548 | acc=0.7311 | loss_val=0.6548 | acc_val=0.7314 | lr=0.01010 | time=14.75s | gpu=1.4123s | bc=13.3319s | wait=0.0005s | overlap=13.3314s
+  Epoch 100 | loss=0.6534 | acc=0.7327 | loss_val=0.6535 | acc_val=0.7330 | lr=0.00917 | time=14.89s | gpu=1.3873s | bc=13.3274s | wait=0.0005s | overlap=13.3270s
+  Epoch 110 | loss=0.6522 | acc=0.7337 | loss_val=0.6523 | acc_val=0.7339 | lr=0.00840 | time=14.56s | gpu=1.3737s | bc=13.3251s | wait=0.0005s | overlap=13.3247s
+  Epoch 120 | loss=0.6512 | acc=0.7346 | loss_val=0.6512 | acc_val=0.7351 | lr=0.00775 | time=14.66s | gpu=1.3537s | bc=13.3232s | wait=0.0005s | overlap=13.3227s
+  Epoch 130 | loss=0.6502 | acc=0.7353 | loss_val=0.6502 | acc_val=0.7365 | lr=0.00719 | time=14.79s | gpu=1.3876s | bc=13.3220s | wait=0.0005s | overlap=13.3216s
+  Epoch 140 | loss=0.6492 | acc=0.7358 | loss_val=0.6493 | acc_val=0.7372 | lr=0.00671 | time=14.71s | gpu=1.3927s | bc=13.3224s | wait=0.0005s | overlap=13.3220s
+  Epoch 150 | loss=0.6484 | acc=0.7365 | loss_val=0.6484 | acc_val=0.7376 | lr=0.00629 | time=14.79s | gpu=1.3582s | bc=13.3113s | wait=0.0005s | overlap=13.3109s
+  Epoch 160 | loss=0.6476 | acc=0.7373 | loss_val=0.6476 | acc_val=0.7382 | lr=0.00592 | time=14.73s | gpu=1.4032s | bc=13.3213s | wait=0.0005s | overlap=13.3209s
+  Epoch 170 | loss=0.6468 | acc=0.7378 | loss_val=0.6469 | acc_val=0.7391 | lr=0.00559 | time=14.84s | gpu=1.4114s | bc=13.3250s | wait=0.0005s | overlap=13.3245s
+  Epoch 180 | loss=0.6461 | acc=0.7382 | loss_val=0.6462 | acc_val=0.7397 | lr=0.00529 | time=14.76s | gpu=1.3571s | bc=13.3114s | wait=0.0005s | overlap=13.3110s
+  Epoch 190 | loss=0.6455 | acc=0.7388 | loss_val=0.6455 | acc_val=0.7403 | lr=0.00503 | time=14.75s | gpu=1.3783s | bc=13.3203s | wait=0.0005s | overlap=13.3198s
+  Epoch 200 | loss=0.6448 | acc=0.7393 | loss_val=0.6449 | acc_val=0.7411 | lr=0.00478 | time=14.76s | gpu=1.3608s | bc=13.3162s | wait=0.0005s | overlap=13.3157s
+
+[DONE] Tempo totale: 2961.58s
+[DONE] Risultati salvati in /home/mpiuser/test/results/opencl/opencl_second_test_epsilon_normalized_np1.csv

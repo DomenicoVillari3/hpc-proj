@@ -3,11 +3,11 @@ import json
 import os
 import time
 import csv
-from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
+from concurrent.futures import ThreadPoolExecutor
 from mpi4py import MPI
 from dotenv import load_dotenv
 
-from utils import sigmoid, compute_loss, compute_accuracy 
+from utils import sigmoid, compute_loss, compute_accuracy
 
 load_dotenv()
 
@@ -18,14 +18,13 @@ size = comm.Get_size()
 
 DATA_DIR   = os.getenv("DATASET_DIR")
 DATASET    = os.getenv("DATASET_NAME")
-RESULTS = os.path.join(os.getenv("RESULTS_DIR"), f"task_parallelism/tasks_{DATASET}_np{size}.csv")
+RESULTS    = os.path.join(os.getenv("RESULTS_DIR"), f"task_parallelism/tasks_second_test_{DATASET}_np{size}.csv")
 
 SEED       = int(os.getenv("SEED", 42))
 EPOCHS     = int(os.getenv("EPOCHS"))
 BATCH_SIZE = int(os.getenv("BATCH_SIZE"))
 LR0        = float(os.getenv("LEARNING_RATE"))
 VAL_SPLIT  = 0.05  # frazione del shard per Task B
-
 
 
 # --- Task A: calcolo gradiente ---
@@ -92,15 +91,14 @@ w   = rng.normal(0, 0.01, D).astype(np.float64)
 # Buffer Allreduce
 grad_buf = np.zeros(D, dtype=np.float64)
 
-# Accumulatori per misura overlap
-total_allreduce_time = 0.0
-total_taskbc_time    = 0.0
+# Accumulatori timing corretti
+total_taskbc_time = 0.0  # tempo di esecuzione B‖C
+total_wait_time   = 0.0  # tempo residuo di Wait dopo che B+C sono finiti
 
 results = []
 
-# Pre-prepara il primo batch (step 0) prima del loop
-# Task C del passo -1 — inizializzazione
-rng_seed_init = SEED + rank * 10000
+# Pre-prepara il primo batch prima del loop
+rng_seed_init  = SEED + rank * 10000
 X_next, y_next = task_c(X_train_s, y_train_s, BATCH_SIZE, rng_seed_init)
 
 comm.Barrier()
@@ -116,81 +114,78 @@ with ThreadPoolExecutor(max_workers=3) as executor:
 
         for step in range(steps_per_epoch):
 
-            # Il batch corrente è quello preparato dal Task C del passo precedente
-            X_batch = X_next
-            y_batch = y_next
-
-            # Snapshot di w — read-only per tutti i task
+            X_batch    = X_next
+            y_batch    = y_next
             w_snapshot = w.copy()
 
-            # ── STEP 1: Task A (critico, sincrono) ──────────────────────
-            # Calcola il gradiente sul batch corrente
-            fut_a = executor.submit(task_a, X_batch, y_batch, w_snapshot)
+            # ── STEP 1: Task A (sincrono) ────────────────────────────────
+            fut_a      = executor.submit(task_a, X_batch, y_batch, w_snapshot)
             grad_local = fut_a.result()
 
-            # ── STEP 2: Lancia Iallreduce (non-bloccante) ───────────────
+            # ── STEP 2: Lancia Iallreduce (non-bloccante) ────────────────
             grad_buf[:] = 0.0
-            t_ar0   = time.time()
             request = comm.Iallreduce(grad_local, grad_buf, op=MPI.SUM)
 
-            # ── STEP 3: Task B e Task C in parallelo con Allreduce ───────
-            # Task B: valuta loss su validation set (legge w_snapshot)
-            # Task C: prepara batch per step+1 (non legge w)
-            t_bc0  = time.time()
+            # ── STEP 3: Task B e Task C in parallelo con Allreduce ────────
+            # Timer B+C: misura solo il tempo di esecuzione dei task
+            t_bc0         = time.time()
             rng_seed_next = SEED + rank * 10000 + epoch * 100000 + step + 1
-            fut_b  = executor.submit(task_b, X_val, y_val, w_snapshot)
-            fut_c  = executor.submit(task_c, X_train_s, y_train_s,
-                                     BATCH_SIZE, rng_seed_next)
-
+            fut_b         = executor.submit(task_b, X_val, y_val, w_snapshot)
+            fut_c         = executor.submit(task_c, X_train_s, y_train_s,
+                                            BATCH_SIZE, rng_seed_next)
             loss_val, acc_val = fut_b.result()
-            X_next, y_next    = fut_c.result()  # batch pronto per il prossimo step
-            t_bc1  = time.time()
+            X_next, y_next    = fut_c.result()
+            t_bc1         = time.time()
 
-            # ── STEP 4: Attendi Allreduce ────────────────────────────────
+            # ── STEP 4: Wait residuo ─────────────────────────────────────
+            # Misura solo il tempo di attesa DOPO che B+C sono finiti.
+            # Se t_wait ≈ 0 → l'Allreduce era già completo (overlap totale).
+            # Se t_wait > 0 → la rete era più lenta di B+C (overlap parziale).
+            t_wait0 = time.time()
             request.Wait()
-            t_ar1 = time.time()
+            t_wait1 = time.time()
 
-            # ── STEP 5: Aggiorna w ───────────────────────────────────────
+            # ── STEP 5: Aggiorna w ────────────────────────────────────────
             w -= lr * (grad_buf / size)
 
             # Accumula tempi
-            total_allreduce_time += (t_ar1 - t_ar0)
-            total_taskbc_time    += (t_bc1 - t_bc0)
+            total_taskbc_time += (t_bc1 - t_bc0)
+            total_wait_time   += (t_wait1 - t_wait0)
 
         epoch_time = time.time() - t_epoch
 
-        # Sostituisci il blocco di valutazione ogni 10 epoche con questo:
         if (epoch + 1) % 10 == 0 or epoch == 0:
             if rank == 0:
                 loss_test = compute_loss(X_test, y_test, w)
                 acc_test  = compute_accuracy(X_test, y_test, w)
-                
-                # Numero di epoche nell'intervallo corrente
-                interval = 10 if epoch > 0 else 1
-                
-                ar_per_epoch = total_allreduce_time / interval
-                bc_per_epoch = total_taskbc_time    / interval
-                overlap      = min(ar_per_epoch, bc_per_epoch)
+
+                interval       = 10 if epoch > 0 else 1
+                bc_per_epoch   = total_taskbc_time / interval
+                wait_per_epoch = total_wait_time   / interval
+                # overlap effettivo = quanto di B+C ha coperto la finestra di rete
+                # se wait=0 → overlap totale; se wait>0 → overlap parziale
+                overlap = bc_per_epoch - wait_per_epoch
 
                 print(f"  Epoch {epoch+1:3d} | loss={loss_test:.4f} | acc={acc_test:.4f} "
-                    f"| lr={lr:.5f} | time={epoch_time:.2f}s "
-                    f"| ar={ar_per_epoch:.4f}s "
-                    f"| bc={bc_per_epoch:.4f}s "
-                    f"| overlap={overlap:.4f}s")
+                      f"| lr={lr:.5f} | time={epoch_time:.2f}s "
+                      f"| bc={bc_per_epoch:.4f}s "
+                      f"| wait={wait_per_epoch:.4f}s "
+                      f"| overlap={overlap:.4f}s")
                 results.append({
-                    "epoch":            epoch + 1,
-                    "loss":             round(float(loss_test), 6),
-                    "accuracy":         round(float(acc_test), 6),
-                    "lr":               round(lr, 6),
-                    "epoch_time_s":     round(epoch_time, 4),
-                    "allreduce_time_s": round(ar_per_epoch, 4),
-                    "taskbc_time_s":    round(bc_per_epoch, 4),
-                    "overlap_s":        round(overlap, 4),
-                    "num_ranks":        size
+                    "epoch":         epoch + 1,
+                    "loss":          round(float(loss_test), 6),
+                    "accuracy":      round(float(acc_test), 6),
+                    "lr":            round(lr, 6),
+                    "epoch_time_s":  round(epoch_time, 4),
+                    "taskbc_time_s": round(bc_per_epoch, 4),
+                    "wait_time_s":   round(wait_per_epoch, 4),
+                    "overlap_s":     round(overlap, 4),
+                    "num_ranks":     size
                 })
-            # Reset accumulatori dopo ogni finestra
-            total_allreduce_time = 0.0
-            total_taskbc_time    = 0.0
+
+            # Reset accumulatori
+            total_taskbc_time = 0.0
+            total_wait_time   = 0.0
 
 comm.Barrier()
 total_time = time.time() - t_start
@@ -200,8 +195,8 @@ if rank == 0:
     with open(RESULTS, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=[
             "epoch", "loss", "accuracy", "lr",
-            "epoch_time_s", "allreduce_time_s", "taskbc_time_s",
-            "overlap_s", "num_ranks"
+            "epoch_time_s", "taskbc_time_s",
+            "wait_time_s", "overlap_s", "num_ranks"
         ])
         writer.writeheader()
         writer.writerows(results)

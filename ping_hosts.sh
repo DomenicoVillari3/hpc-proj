@@ -60,14 +60,14 @@ done
 
 print_header "Controllo Hostname (Test SSH)"
 
-for node in mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12 ; do    
+for node in mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12 mpi13; do    
     printf "${YELLOW}%-7s${NC} ➔  " "$node"
     ssh -o ConnectTimeout=3 -o BatchMode=yes mpiuser@$node hostname 2>&1
 done
 
 print_header "Controllo Mount NFS "
 
-for node in  mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12 ; do
+for node in  mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12 mpi13; do
     printf "${YELLOW}%-7s${NC} ➔  " "$node"
     
     # Catturiamo l'output per evitare spazi vuoti disordinati se grep non trova nulla
@@ -81,9 +81,13 @@ done
 
 print_header "Controllo Python (mpi4py)"
 
-for node in mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12; do
+for node in mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12 mpi13; do
     printf "${YELLOW}%-7s${NC} ➔  " "$node"
     ssh mpiuser@$node "/home/mpiuser/test/.venv/bin/python3 -c 'from mpi4py import MPI; print(\"OK\")'" 2>&1
 done
 
+for node in mpi1 mpi2 mpi3 mpi4 mpi5 mpi6 mpi7 mpi8 mpi9 mpi10 mpi11 mpi12 mpi13; do
+    printf "${YELLOW}%-7s${NC} ➔  " "$node"
+  ssh mpiuser@$node "which perf"
+done
 echo -e "\n${CYAN}${BOLD}=== Esecuzione terminata ===${NC}\n"

@@ -1,0 +1,114 @@
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+[rank 3] Building OpenCL program on NVIDIA T1000...
+[rank 1] Building OpenCL program on NVIDIA T1000...
+[rank 3] Build OK
+[rank 1] Build OK
+[rank 2] Building OpenCL program on NVIDIA T1000...
+[rank 2] Build OK
+[INFO] Dataset: epsilon_normalized | N_train=400000 | D=2000
+[INFO] Ranks: 8 | shard: ~50000 | val_size: 2500
+[INFO] epochs=200 | batch=4096 | lr0=0.1
+[rank 0] Building OpenCL program on NVIDIA T1000...
+[rank 0] Build OK
+[OpenCL] Platform: NVIDIA CUDA
+[OpenCL] Device:   NVIDIA T1000
+[OpenCL] Max WG:   1024
+[rank 4] Building OpenCL program on NVIDIA T1000...
+[rank 7] Building OpenCL program on NVIDIA T1000...
+[rank 5] Building OpenCL program on NVIDIA T1000...
+[rank 4] Build OK
+[rank 7] Build OK
+[rank 5] Build OK
+[rank 6] Building OpenCL program on NVIDIA T1000...
+[rank 6] Build OK
+  Epoch   1 | loss=0.6931 | acc=0.5038 | loss_val=0.6931 | acc_val=0.4960 | lr=0.10000 | time=0.60s | gpu=0.1386s | bc=0.3453s | wait=0.1118s | overlap=0.2335s
+  Epoch  10 | loss=0.6917 | acc=0.6219 | loss_val=0.6916 | acc_val=0.6256 | lr=0.05263 | time=0.62s | gpu=0.1369s | bc=0.3090s | wait=0.0953s | overlap=0.2137s
+  Epoch  20 | loss=0.6907 | acc=0.6589 | loss_val=0.6906 | acc_val=0.6552 | lr=0.03448 | time=0.54s | gpu=0.1416s | bc=0.3404s | wait=0.1031s | overlap=0.2373s
+  Epoch  30 | loss=0.6900 | acc=0.6699 | loss_val=0.6900 | acc_val=0.6660 | lr=0.02564 | time=0.65s | gpu=0.1534s | bc=0.3410s | wait=0.0839s | overlap=0.2571s
+  Epoch  40 | loss=0.6895 | acc=0.6768 | loss_val=0.6894 | acc_val=0.6728 | lr=0.02041 | time=0.57s | gpu=0.1699s | bc=0.3448s | wait=0.0877s | overlap=0.2571s
+  Epoch  50 | loss=0.6891 | acc=0.6804 | loss_val=0.6890 | acc_val=0.6792 | lr=0.01695 | time=0.54s | gpu=0.1414s | bc=0.3469s | wait=0.0775s | overlap=0.2694s
+  Epoch  60 | loss=0.6887 | acc=0.6838 | loss_val=0.6887 | acc_val=0.6840 | lr=0.01449 | time=0.56s | gpu=0.1532s | bc=0.3430s | wait=0.0883s | overlap=0.2547s
+  Epoch  70 | loss=0.6884 | acc=0.6858 | loss_val=0.6884 | acc_val=0.6900 | lr=0.01266 | time=0.63s | gpu=0.1610s | bc=0.3421s | wait=0.0936s | overlap=0.2485s
+  Epoch  80 | loss=0.6882 | acc=0.6877 | loss_val=0.6881 | acc_val=0.6900 | lr=0.01124 | time=0.58s | gpu=0.1454s | bc=0.3411s | wait=0.1008s | overlap=0.2402s
+  Epoch  90 | loss=0.6879 | acc=0.6887 | loss_val=0.6879 | acc_val=0.6928 | lr=0.01010 | time=0.65s | gpu=0.1409s | bc=0.3418s | wait=0.0866s | overlap=0.2552s
+  Epoch 100 | loss=0.6877 | acc=0.6899 | loss_val=0.6877 | acc_val=0.6932 | lr=0.00917 | time=0.60s | gpu=0.1336s | bc=0.3423s | wait=0.1173s | overlap=0.2250s
+  Epoch 110 | loss=0.6875 | acc=0.6912 | loss_val=0.6875 | acc_val=0.6956 | lr=0.00840 | time=0.58s | gpu=0.1517s | bc=0.3424s | wait=0.1071s | overlap=0.2353s
+  Epoch 120 | loss=0.6873 | acc=0.6921 | loss_val=0.6873 | acc_val=0.6956 | lr=0.00775 | time=0.52s | gpu=0.1640s | bc=0.3430s | wait=0.0775s | overlap=0.2655s
+  Epoch 130 | loss=0.6872 | acc=0.6923 | loss_val=0.6871 | acc_val=0.6960 | lr=0.00719 | time=0.57s | gpu=0.1450s | bc=0.3431s | wait=0.0736s | overlap=0.2695s
+  Epoch 140 | loss=0.6870 | acc=0.6929 | loss_val=0.6870 | acc_val=0.6972 | lr=0.00671 | time=0.55s | gpu=0.1343s | bc=0.3408s | wait=0.0910s | overlap=0.2498s
+  Epoch 150 | loss=0.6869 | acc=0.6934 | loss_val=0.6868 | acc_val=0.6972 | lr=0.00629 | time=0.57s | gpu=0.1617s | bc=0.3421s | wait=0.0927s | overlap=0.2494s
+  Epoch 160 | loss=0.6868 | acc=0.6941 | loss_val=0.6867 | acc_val=0.6988 | lr=0.00592 | time=0.55s | gpu=0.1421s | bc=0.3416s | wait=0.1021s | overlap=0.2395s
+  Epoch 170 | loss=0.6866 | acc=0.6944 | loss_val=0.6866 | acc_val=0.7008 | lr=0.00559 | time=0.58s | gpu=0.1522s | bc=0.3426s | wait=0.1166s | overlap=0.2260s
+  Epoch 180 | loss=0.6865 | acc=0.6948 | loss_val=0.6864 | acc_val=0.7020 | lr=0.00529 | time=0.59s | gpu=0.1722s | bc=0.3435s | wait=0.1114s | overlap=0.2321s
+  Epoch 190 | loss=0.6864 | acc=0.6952 | loss_val=0.6863 | acc_val=0.7028 | lr=0.00503 | time=0.60s | gpu=0.1411s | bc=0.3413s | wait=0.1244s | overlap=0.2169s
+  Epoch 200 | loss=0.6863 | acc=0.6953 | loss_val=0.6862 | acc_val=0.7028 | lr=0.00478 | time=0.58s | gpu=0.1407s | bc=0.3417s | wait=0.1133s | overlap=0.2284s
+
+[DONE] Tempo totale: 132.77s
+[DONE] Risultati salvati in /home/mpiuser/test/results/opencl/opencl_second_test_epsilon_normalized_np8.csv

@@ -1,0 +1,38 @@
+=== np=1 ===
+mpi1: avg=0,8% max=15%
+
+=== np=2 ===
+mpi1: avg=5,7% max=7%
+mpi2: avg=5,7% max=7%
+
+=== np=4 ===
+mpi1: avg=7,3% max=10%
+mpi2: avg=7,3% max=10%
+mpi3: avg=7,3% max=10%
+mpi4: avg=7,3% max=10%
+
+=== np=8 ===
+mpi1: avg=3,0% max=12%
+mpi2: avg=3,0% max=12%
+mpi3: avg=3,1% max=12%
+mpi4: avg=3,0% max=12%
+mpi5: avg=3,1% max=12%
+mpi6: avg=3,0% max=12%
+mpi7: avg=3,0% max=12%
+mpi8: avg=3,0% max=12%
+
+=== np=13 ===
+mpi1: avg=2,2% max=15%
+mpi2: avg=2,3% max=16%
+mpi3: avg=2,3% max=16%
+mpi4: avg=2,3% max=16%
+mpi5: avg=2,3% max=16%
+mpi6: avg=2,3% max=16%
+mpi7: avg=2,3% max=16%
+mpi8: avg=2,3% max=16%
+mpi9: avg=2,3% max=16%
+mpi10: avg=2,3% max=16%
+mpi11: avg=2,3% max=16%
+mpi12: avg=2,3% max=16%
+mpi13: avg=2,3% max=16%
+

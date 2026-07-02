@@ -18,7 +18,7 @@ size = comm.Get_size()
 
 DATA_DIR    = os.getenv("DATASET_DIR")
 DATASET     = os.getenv("DATASET_NAME")
-RESULTS = os.path.join(os.getenv("RESULTS_DIR"), f"opencl/opencl_{DATASET}_np{size}.csv")
+RESULTS     = os.path.join(os.getenv("RESULTS_DIR"), f"opencl/opencl_second_test_{DATASET}_np{size}.csv")
 KERNEL_PATH = os.path.join(os.getenv("KERNEL_DIR",
               "/home/mpiuser/test/kernels"), "gradient.cl")
 
@@ -31,7 +31,7 @@ WG_SIZE     = 256
 
 # --- Setup OpenCL ---
 def setup_opencl():
-    platforms = cl.get_platforms()
+    platforms    = cl.get_platforms()
     gpu_platform = None
     for p in platforms:
         if "NVIDIA" in p.name or "nvidia" in p.name.lower():
@@ -70,11 +70,11 @@ def setup_opencl():
 def task_a_gpu(ctx, queue, k_forward, k_gradient, X_batch, y_batch, w_snapshot):
     B, D = X_batch.shape
 
-    X_f32 = np.ascontiguousarray(X_batch, dtype=np.float32)
-    y_f32 = np.ascontiguousarray(y_batch, dtype=np.float32)
+    X_f32 = np.ascontiguousarray(X_batch,    dtype=np.float32)
+    y_f32 = np.ascontiguousarray(y_batch,    dtype=np.float32)
     w_f32 = np.ascontiguousarray(w_snapshot, dtype=np.float32)
 
-    mf = cl.mem_flags
+    mf       = cl.mem_flags
     X_buf    = cl.Buffer(ctx, mf.READ_ONLY  | mf.COPY_HOST_PTR, hostbuf=X_f32)
     y_buf    = cl.Buffer(ctx, mf.READ_ONLY  | mf.COPY_HOST_PTR, hostbuf=y_f32)
     w_buf    = cl.Buffer(ctx, mf.READ_ONLY  | mf.COPY_HOST_PTR, hostbuf=w_f32)
@@ -156,14 +156,14 @@ w   = rng.normal(0, 0.01, D).astype(np.float64)
 # Buffer Allreduce MPI
 grad_buf_mpi = np.zeros(D, dtype=np.float64)
 
-# Accumulatori timing
-total_allreduce_time = 0.0
-total_taskbc_time    = 0.0
-total_gpu_time       = 0.0
+# Accumulatori timing corretti
+total_gpu_time    = 0.0  # tempo kernel GPU (Task A)
+total_taskbc_time = 0.0  # tempo esecuzione B‖C
+total_wait_time   = 0.0  # tempo Wait residuo dopo B+C
 
-results        = []
-last_loss_val  = 0.0
-last_acc_val   = 0.0
+results       = []
+last_loss_val = 0.0
+last_acc_val  = 0.0
 
 # Pre-prepara primo batch
 X_next, y_next = task_c(X_train_s, y_train_s, BATCH_SIZE,
@@ -186,7 +186,7 @@ with ThreadPoolExecutor(max_workers=3) as executor:
             y_batch    = y_next
             w_snapshot = w.copy()
 
-            # STEP 1: Task A su GPU (sincrono)
+            # ── STEP 1: Task A su GPU (sincrono) ─────────────────────────
             t_gpu0     = time.time()
             fut_a      = executor.submit(task_a_gpu, ctx, queue,
                                          k_forward, k_gradient,
@@ -194,32 +194,35 @@ with ThreadPoolExecutor(max_workers=3) as executor:
             grad_local = fut_a.result()
             t_gpu1     = time.time()
 
-            # STEP 2: Iallreduce non-bloccante
+            # ── STEP 2: Lancia Iallreduce (non-bloccante) ─────────────────
             grad_buf_mpi[:] = 0.0
-            t_ar0   = time.time()
             request = comm.Iallreduce(grad_local, grad_buf_mpi, op=MPI.SUM)
 
-            # STEP 3: Task B e Task C in parallelo con Allreduce
+            # ── STEP 3: Task B e Task C in parallelo con Allreduce ─────────
+            # Timer B+C: misura solo il tempo di esecuzione dei task
             t_bc0         = time.time()
             rng_seed_next = SEED + rank * 10000 + epoch * 100000 + step + 1
             fut_b         = executor.submit(task_b, X_val, y_val, w_snapshot)
             fut_c         = executor.submit(task_c, X_train_s, y_train_s,
                                             BATCH_SIZE, rng_seed_next)
-
             last_loss_val, last_acc_val = fut_b.result()
             X_next, y_next              = fut_c.result()
-            t_bc1 = time.time()
+            t_bc1         = time.time()
 
-            # STEP 4: Attendi Allreduce
+            # ── STEP 4: Wait residuo ──────────────────────────────────────
+            # Misura solo il tempo di attesa DOPO che B+C sono finiti.
+            # Se t_wait ≈ 0 → overlap totale (rete più veloce di B+C).
+            # Se t_wait > 0 → overlap parziale (rete più lenta di B+C).
+            t_wait0 = time.time()
             request.Wait()
-            t_ar1 = time.time()
+            t_wait1 = time.time()
 
-            # STEP 5: Aggiorna w
+            # ── STEP 5: Aggiorna w ────────────────────────────────────────
             w -= lr * (grad_buf_mpi / size)
 
-            total_gpu_time       += (t_gpu1 - t_gpu0)
-            total_allreduce_time += (t_ar1 - t_ar0)
-            total_taskbc_time    += (t_bc1 - t_bc0)
+            total_gpu_time    += (t_gpu1 - t_gpu0)
+            total_taskbc_time += (t_bc1 - t_bc0)
+            total_wait_time   += (t_wait1 - t_wait0)
 
         epoch_time = time.time() - t_epoch
 
@@ -228,11 +231,12 @@ with ThreadPoolExecutor(max_workers=3) as executor:
                 loss_test = compute_loss(X_test, y_test, w)
                 acc_test  = compute_accuracy(X_test, y_test, w)
 
-                interval      = 10 if epoch > 0 else 1
-                ar_per_epoch  = total_allreduce_time / interval
-                bc_per_epoch  = total_taskbc_time    / interval
-                gpu_per_epoch = total_gpu_time       / interval
-                overlap       = min(ar_per_epoch, bc_per_epoch)
+                interval       = 10 if epoch > 0 else 1
+                gpu_per_epoch  = total_gpu_time    / interval
+                bc_per_epoch   = total_taskbc_time / interval
+                wait_per_epoch = total_wait_time   / interval
+                # overlap effettivo = quanto di B+C ha coperto la finestra di rete
+                overlap = bc_per_epoch - wait_per_epoch
 
                 print(f"  Epoch {epoch+1:3d} | loss={loss_test:.4f} "
                       f"| acc={acc_test:.4f} "
@@ -240,27 +244,27 @@ with ThreadPoolExecutor(max_workers=3) as executor:
                       f"| acc_val={last_acc_val:.4f} "
                       f"| lr={lr:.5f} | time={epoch_time:.2f}s "
                       f"| gpu={gpu_per_epoch:.4f}s "
-                      f"| ar={ar_per_epoch:.4f}s "
                       f"| bc={bc_per_epoch:.4f}s "
+                      f"| wait={wait_per_epoch:.4f}s "
                       f"| overlap={overlap:.4f}s")
                 results.append({
-                    "epoch":            epoch + 1,
-                    "loss":             round(float(loss_test), 6),
-                    "accuracy":         round(float(acc_test), 6),
-                    "loss_val":         round(float(last_loss_val), 6),
-                    "acc_val":          round(float(last_acc_val), 6),
-                    "lr":               round(lr, 6),
-                    "epoch_time_s":     round(epoch_time, 4),
-                    "gpu_time_s":       round(gpu_per_epoch, 4),
-                    "allreduce_time_s": round(ar_per_epoch, 4),
-                    "taskbc_time_s":    round(bc_per_epoch, 4),
-                    "overlap_s":        round(overlap, 4),
-                    "num_ranks":        size
+                    "epoch":         epoch + 1,
+                    "loss":          round(float(loss_test), 6),
+                    "accuracy":      round(float(acc_test), 6),
+                    "loss_val":      round(float(last_loss_val), 6),
+                    "acc_val":       round(float(last_acc_val), 6),
+                    "lr":            round(lr, 6),
+                    "epoch_time_s":  round(epoch_time, 4),
+                    "gpu_time_s":    round(gpu_per_epoch, 4),
+                    "taskbc_time_s": round(bc_per_epoch, 4),
+                    "wait_time_s":   round(wait_per_epoch, 4),
+                    "overlap_s":     round(overlap, 4),
+                    "num_ranks":     size
                 })
 
-            total_gpu_time       = 0.0
-            total_allreduce_time = 0.0
-            total_taskbc_time    = 0.0
+            total_gpu_time    = 0.0
+            total_taskbc_time = 0.0
+            total_wait_time   = 0.0
 
 comm.Barrier()
 total_time = time.time() - t_start
@@ -271,7 +275,7 @@ if rank == 0:
         writer = csv.DictWriter(f, fieldnames=[
             "epoch", "loss", "accuracy", "loss_val", "acc_val",
             "lr", "epoch_time_s", "gpu_time_s",
-            "allreduce_time_s", "taskbc_time_s", "overlap_s", "num_ranks"
+            "taskbc_time_s", "wait_time_s", "overlap_s", "num_ranks"
         ])
         writer.writeheader()
         writer.writerows(results)
