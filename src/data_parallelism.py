@@ -77,8 +77,6 @@ w   = rng.normal(0, 0.01, D).astype(np.float64)
 results    = []
 grad_buf   = np.zeros(D, dtype=np.float64)  # buffer Allreduce
 
-# Accumulators for the reporting window (same convention as task_parallelism.py:
-# sum over window epochs, divided by window length to get a per-epoch average).
 ar_window   = 0.0   # allreduce time
 shuf_window = 0.0   # shuffle + fancy-index copy time
 
@@ -90,10 +88,6 @@ for epoch in range(EPOCHS):
     t_ar_epoch = 0.0  # allreduce time accumulated across mini-batches this epoch
     lr = LR0 / (1.0 + epoch * 0.1)
 
-    # Shuffle — timed separately because task_parallelism.py hides this cost
-    # inside Task C (random sampling overlapped with AllReduce each step).
-    # Here we permute and copy the entire shard once per epoch upfront,
-    # which is equivalent work but NOT overlapped with anything.
     t_shuf = time.time()
     rng_local = np.random.default_rng(SEED + epoch * 100 + rank)
     idx    = rng_local.permutation(N_train_s)

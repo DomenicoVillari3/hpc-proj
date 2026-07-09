@@ -156,7 +156,6 @@ w   = rng.normal(0, 0.01, D).astype(np.float64)
 # Buffer Allreduce MPI
 grad_buf_mpi = np.zeros(D, dtype=np.float64)
 
-# Accumulatori timing corretti
 total_gpu_time    = 0.0  # tempo kernel GPU (Task A)
 total_taskbc_time = 0.0  # tempo esecuzione B‖C
 total_wait_time   = 0.0  # tempo Wait residuo dopo B+C
@@ -198,8 +197,6 @@ with ThreadPoolExecutor(max_workers=3) as executor:
             grad_buf_mpi[:] = 0.0
             request = comm.Iallreduce(grad_local, grad_buf_mpi, op=MPI.SUM)
 
-            # ── STEP 3: Task B e Task C in parallelo con Allreduce ─────────
-            # Timer B+C: misura solo il tempo di esecuzione dei task
             t_bc0         = time.time()
             rng_seed_next = SEED + rank * 10000 + epoch * 100000 + step + 1
             fut_b         = executor.submit(task_b, X_val, y_val, w_snapshot)
@@ -209,10 +206,6 @@ with ThreadPoolExecutor(max_workers=3) as executor:
             X_next, y_next              = fut_c.result()
             t_bc1         = time.time()
 
-            # ── STEP 4: Wait residuo ──────────────────────────────────────
-            # Misura solo il tempo di attesa DOPO che B+C sono finiti.
-            # Se t_wait ≈ 0 → overlap totale (rete più veloce di B+C).
-            # Se t_wait > 0 → overlap parziale (rete più lenta di B+C).
             t_wait0 = time.time()
             request.Wait()
             t_wait1 = time.time()
@@ -235,7 +228,7 @@ with ThreadPoolExecutor(max_workers=3) as executor:
                 gpu_per_epoch  = total_gpu_time    / interval
                 bc_per_epoch   = total_taskbc_time / interval
                 wait_per_epoch = total_wait_time   / interval
-                # overlap effettivo = quanto di B+C ha coperto la finestra di rete
+
                 overlap = bc_per_epoch - wait_per_epoch
 
                 print(f"  Epoch {epoch+1:3d} | loss={loss_test:.4f} "

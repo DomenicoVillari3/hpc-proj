@@ -28,20 +28,17 @@ VAL_SPLIT  = 0.05  # frazione del shard per Task B
 
 
 # --- Task A: calcolo gradiente ---
-# w_snapshot è read-only (copia di w al momento del lancio)
 def task_a(X_batch, y_batch, w_snapshot):
     grad = (X_batch.T @ (sigmoid(X_batch @ w_snapshot) - y_batch)) / len(y_batch)
     return grad.astype(np.float64)
 
 # --- Task B: valutazione loss su validation set ---
-# Legge w_snapshot (read-only) e X_val, y_val (fissi)
 def task_b(X_val, y_val, w_snapshot):
     loss = compute_loss(X_val, y_val, w_snapshot)
     acc  = compute_accuracy(X_val, y_val, w_snapshot)
     return loss, acc
 
 # --- Task C: preparazione prossimo mini-batch ---
-# NON legge w — solo shuffle su indici del dataset locale
 def task_c(X_train, y_train, batch_size, rng_seed):
     rng_local = np.random.default_rng(rng_seed)
     idx = rng_local.choice(len(y_train), size=batch_size, replace=False)
@@ -91,7 +88,6 @@ w   = rng.normal(0, 0.01, D).astype(np.float64)
 # Buffer Allreduce
 grad_buf = np.zeros(D, dtype=np.float64)
 
-# Accumulatori timing corretti
 total_taskbc_time = 0.0  # tempo di esecuzione B‖C
 total_wait_time   = 0.0  # tempo residuo di Wait dopo che B+C sono finiti
 
@@ -126,8 +122,6 @@ with ThreadPoolExecutor(max_workers=3) as executor:
             grad_buf[:] = 0.0
             request = comm.Iallreduce(grad_local, grad_buf, op=MPI.SUM)
 
-            # ── STEP 3: Task B e Task C in parallelo con Allreduce ────────
-            # Timer B+C: misura solo il tempo di esecuzione dei task
             t_bc0         = time.time()
             rng_seed_next = SEED + rank * 10000 + epoch * 100000 + step + 1
             fut_b         = executor.submit(task_b, X_val, y_val, w_snapshot)
@@ -137,10 +131,6 @@ with ThreadPoolExecutor(max_workers=3) as executor:
             X_next, y_next    = fut_c.result()
             t_bc1         = time.time()
 
-            # ── STEP 4: Wait residuo ─────────────────────────────────────
-            # Misura solo il tempo di attesa DOPO che B+C sono finiti.
-            # Se t_wait ≈ 0 → l'Allreduce era già completo (overlap totale).
-            # Se t_wait > 0 → la rete era più lenta di B+C (overlap parziale).
             t_wait0 = time.time()
             request.Wait()
             t_wait1 = time.time()
@@ -148,7 +138,6 @@ with ThreadPoolExecutor(max_workers=3) as executor:
             # ── STEP 5: Aggiorna w ────────────────────────────────────────
             w -= lr * (grad_buf / size)
 
-            # Accumula tempi
             total_taskbc_time += (t_bc1 - t_bc0)
             total_wait_time   += (t_wait1 - t_wait0)
 
@@ -162,8 +151,7 @@ with ThreadPoolExecutor(max_workers=3) as executor:
                 interval       = 10 if epoch > 0 else 1
                 bc_per_epoch   = total_taskbc_time / interval
                 wait_per_epoch = total_wait_time   / interval
-                # overlap effettivo = quanto di B+C ha coperto la finestra di rete
-                # se wait=0 → overlap totale; se wait>0 → overlap parziale
+
                 overlap = bc_per_epoch - wait_per_epoch
 
                 print(f"  Epoch {epoch+1:3d} | loss={loss_test:.4f} | acc={acc_test:.4f} "
@@ -183,7 +171,6 @@ with ThreadPoolExecutor(max_workers=3) as executor:
                     "num_ranks":     size
                 })
 
-            # Reset accumulatori
             total_taskbc_time = 0.0
             total_wait_time   = 0.0
 

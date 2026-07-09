@@ -42,9 +42,7 @@ if rank == 0:
     print(f"world_size={world_size} | NUM_GROUPS={NUM_GROUPS} | "
           f"ranks usati={1 + NUM_GROUPS * RANKS_PER_GROUP}", flush=True)
 
-# ─────────────────────────────────────────────
-# comm.Split — chiamata collettiva su TUTTI i rank
-# ─────────────────────────────────────────────
+
 if rank == MASTER_RANK:
     group_comm = comm.Split(MPI.UNDEFINED, rank)
 else:
@@ -68,9 +66,7 @@ CONFIGS = [
 TAG_JOB    = 1
 TAG_RESULT = 2
 
-# ─────────────────────────────────────────────
-# Training completo (L2+L3 o L2+L3+L4)
-# ─────────────────────────────────────────────
+
 def run_training(group_comm, local_rank, group_id,
                  lr, batch_size, use_gpu, dataset):
 
