@@ -5,7 +5,7 @@ Progetto di **High Performance Computing** per confrontare l'addestramento di un
 Il repository implementa una baseline sequenziale, comunicazione master-worker, parallelismo dei dati, sovrapposizione tra comunicazione e task CPU e calcolo del gradiente su GPU. Include inoltre una coda di job MPI per eseguire configurazioni di iperparametri in gruppi di processi.
 
 **Autori:** Domenico Villari e Francesco Maria Russo  
-**Corso:** High Performance Computing — Prof. Salvatore Distefano  
+**Corso:** High Performance Computing   
 **Università:** Università degli Studi di Messina
 
 ## Implementazioni
